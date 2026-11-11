@@ -1,0 +1,76 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+
+public class Managers : MonoBehaviour
+{    
+
+    /// <summary>
+    /// Jammers shouldn't have any reason to access Managers.__instance. Everything accessible
+    /// from here should be considered internal and not be used during minigames.
+    /// </summary>
+    public static Managers __instance { get; private set; }
+
+    [SerializeField] private MinigamesManager _minigamesManager;
+    public MinigamesManager minigamesManager => _minigamesManager;
+    public static IMinigamesManager MinigamesManager => __instance.minigamesManager;
+
+    [SerializeField] private AudioManager _audioManager;
+    public AudioManager audioManager => _audioManager;
+    public static IMinigameAudioManager AudioManager => __instance.audioManager;
+
+    [SerializeField] private ScenesManager _scenesManager;
+    public ScenesManager scenesManager => _scenesManager;
+
+    [SerializeField] private UpgradeManager _upgradeManager;
+    public UpgradeManager upgradeManager => _upgradeManager;
+    
+    [SerializeField] private EncounterManager _encounterManager;
+    public EncounterManager encounterManager => _encounterManager;
+
+    private void Awake() {
+        if (__instance == null) {
+
+            // we are the chosen one
+            __instance = this;
+
+            StartCoroutine("Unfade");
+            minigamesManager.Initialize();
+            audioManager.Initialize();
+            scenesManager.Initialize();
+            upgradeManager.Initialize();
+            encounterManager.Initialize();
+
+            DontDestroyOnLoad(gameObject);
+        }
+        else if (__instance != this) {
+            // goodbye
+            Destroy(gameObject);
+        }
+    }
+    public Image fader;
+    public float fadeSpeed;
+    private IEnumerator Unfade()
+    {
+        if (fader)
+        {
+            float timer = 0;
+            while (timer <= 1)
+            {
+                fader.color = Color.Lerp(Color.black, Color.clear, timer);
+                timer += Time.deltaTime * fadeSpeed;
+                yield return null;
+            }
+            fader.gameObject.SetActive(false);
+        }
+    }
+    private void Update()
+    {
+        if (SceneManager.GetActiveScene().name == "TitleScreen") {
+            __instance = null;
+            Destroy(gameObject);
+        }
+    }
+}
